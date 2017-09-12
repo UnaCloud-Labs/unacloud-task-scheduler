@@ -1,0 +1,27 @@
+# Unacloud task scheduler
+#
+# Ignore generated files under /debian folder
+
+changelog
+copyright
+
+control
+control.stub
+files
+
+linux-cloud-tools-4*
+linux-headers-4*
+linux-image-4*
+linux-image-extra-4*
+linux-tools-4*
+
+linux-lts-wily-*
+
+build/
+linux-cloud-tools-4*/
+linux-headers-4*/
+linux-image-4*/
+linux-image-extra-4*/
+linux-tools-4*/
+
+stamps/
