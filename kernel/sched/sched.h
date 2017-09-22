@@ -3,6 +3,7 @@
 #include <linux/sched/sysctl.h>
 #include <linux/sched/rt.h>
 #include <linux/sched/deadline.h>
+#include <linux/sched/unacloud.h> /* unacloud scheduler class*/
 #include <linux/mutex.h>
 #include <linux/spinlock.h>
 #include <linux/stop_machine.h>
@@ -89,6 +90,13 @@ static inline int fair_policy(int policy)
 	return policy == SCHED_NORMAL || policy == SCHED_BATCH;
 }
 
+#ifdef CONFIG_UNACLOUD
+static inline int unacloud_policy(int policy) 
+{
+	return policy == SCHED_UNACLOUD;
+}
+#endif
+
 static inline int rt_policy(int policy)
 {
 	return policy == SCHED_FIFO || policy == SCHED_RR;
@@ -103,6 +111,13 @@ static inline int task_has_rt_policy(struct task_struct *p)
 {
 	return rt_policy(p->policy);
 }
+
+#ifdef CONFIG_UNACLOUD
+static inline int task_has_unacloud_policy(struct task_struct *p) /* unacloud */
+{
+	return unacloud_policy(p->policy);
+}
+#endif
 
 static inline int task_has_dl_policy(struct task_struct *p)
 {
@@ -427,6 +442,13 @@ struct cfs_rq {
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 };
 
+#ifdef CONFIG_UNACLOUD
+/* unacloud runqueue */
+struct unacloud_rq {  
+	struct list_head unacloud_list; // TODO: STATIC LIST_HEAD(unacloud_list);
+};
+#endif
+
 static inline int rt_bandwidth_enabled(void)
 {
 	return sysctl_sched_rt_runtime >= 0;
@@ -591,6 +613,10 @@ struct rq {
 	struct cfs_rq cfs;
 	struct rt_rq rt;
 	struct dl_rq dl;
+	
+#ifdef CONFIG_UNACLOUD
+	struct unacloud_rq unacloud_rq;
+#endif	
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
 	/* list of leaf cfs_rq on this cpu: */
@@ -1257,6 +1283,9 @@ extern const struct sched_class stop_sched_class;
 extern const struct sched_class dl_sched_class;
 extern const struct sched_class rt_sched_class;
 extern const struct sched_class fair_sched_class;
+#ifdef CONFIG_UNACLOUD
+extern const struct sched_class unacloud_sched_class;
+#endif
 extern const struct sched_class idle_sched_class;
 
 
@@ -1307,6 +1336,9 @@ extern void update_max_interval(void);
 extern void init_sched_dl_class(void);
 extern void init_sched_rt_class(void);
 extern void init_sched_fair_class(void);
+#ifdef CONFIG_UNACLOUD
+extern void init_sched_unacloud_class(void);
+#endif
 
 extern void resched_curr(struct rq *rq);
 extern void resched_cpu(int cpu);
@@ -1709,6 +1741,9 @@ print_numa_stats(struct seq_file *m, int node, unsigned long tsf,
 
 extern void init_cfs_rq(struct cfs_rq *cfs_rq);
 extern void init_rt_rq(struct rt_rq *rt_rq);
+#ifdef CONFIG_UNACLOUD
+extern void init_unacloud_rq(struct unacloud_rq *rq);
+#endif
 extern void init_dl_rq(struct dl_rq *dl_rq);
 
 extern void cfs_bandwidth_usage_inc(void);
