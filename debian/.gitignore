@@ -25,3 +25,5 @@ linux-image-extra-4*/
 linux-tools-4*/
 
 stamps/
+
+*.log
