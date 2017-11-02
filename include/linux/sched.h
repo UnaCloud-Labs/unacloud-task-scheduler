@@ -1272,6 +1272,13 @@ struct sched_entity {
 #endif
 };
 
+#ifdef CONFIG_UNACLOUD
+struct sched_unacloud_entity {
+	struct list_head run_list;
+	unsigned int unacloud_time;
+};
+#endif
+
 struct sched_rt_entity {
 	struct list_head run_list;
 	unsigned long timeout;
@@ -1376,6 +1383,10 @@ struct task_struct {
 	const struct sched_class *sched_class;
 	struct sched_entity se;
 	struct sched_rt_entity rt;
+#ifdef CONFIG_UNACLOUD
+	/* entity of the unacloud scheduler */
+	struct sched_unacloud_entity unacloud_se;
+#endif
 #ifdef CONFIG_CGROUP_SCHED
 	struct task_group *sched_task_group;
 #endif

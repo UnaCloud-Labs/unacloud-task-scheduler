@@ -31,6 +31,12 @@
 #define CLONE_IO		0x80000000	/* Clone io context */
 
 /*
+ *  Include the Unacloud scheduler class  by default 
+ *  TODO: Introduce an option into the kernel configuration 
+ */
+#define CONFIG_UNACLOUD		1
+
+/*
  * Scheduling policies
  */
 #define SCHED_NORMAL		0
@@ -40,6 +46,8 @@
 /* SCHED_ISO: reserved but not implemented yet */
 #define SCHED_IDLE		5
 #define SCHED_DEADLINE		6
+/* Unacloud scheduler */
+#define SCHED_UNACLOUD		7
 
 /* Can be ORed in to make sure the process is reverted back to SCHED_NORMAL on fork */
 #define SCHED_RESET_ON_FORK     0x40000000

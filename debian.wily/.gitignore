@@ -1,0 +1,9 @@
+# Unacloud task scheduler
+#
+# Ignore generated files under /debian.wily folder
+
+control.stub
+
+d-i/kernel-versions
+
+abi/4.2.0-27.32*/

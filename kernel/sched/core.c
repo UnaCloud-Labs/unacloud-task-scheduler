@@ -963,6 +963,10 @@ static inline int normal_prio(struct task_struct *p)
 		prio = MAX_DL_PRIO-1;
 	else if (task_has_rt_policy(p))
 		prio = MAX_RT_PRIO-1 - p->rt_priority;
+#ifdef CONFIG_UNACLOUD
+	else if (task_has_unacloud_policy(p))
+		prio = UNACLOUD_PRIO;
+#endif
 	else
 		prio = __normal_prio(p);
 	return prio;
@@ -2128,6 +2132,11 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
 			p->policy = SCHED_NORMAL;
 			p->static_prio = NICE_TO_PRIO(0);
 			p->rt_priority = 0;
+#ifdef CONFIG_UNACLOUD
+		} else if (task_has_unacloud_policy(p)) {
+			p->policy = SCHED_NORMAL;
+			p->static_prio = NICE_TO_PRIO(0);
+#endif			
 		} else if (PRIO_TO_NICE(p->static_prio) < 0)
 			p->static_prio = NICE_TO_PRIO(0);
 
@@ -2146,6 +2155,10 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
 		return -EAGAIN;
 	} else if (rt_prio(p->prio)) {
 		p->sched_class = &rt_sched_class;
+#ifdef CONFIG_UNACLOUD
+	} else if (unacloud_prio(p->prio)) {
+		p->sched_class = &unacloud_sched_class;
+#endif 		
 	} else {
 		p->sched_class = &fair_sched_class;
 	}
@@ -2927,6 +2940,7 @@ pick_next_task(struct rq *rq, struct task_struct *prev)
 	 * Optimization: we know that if all tasks are in
 	 * the fair class we can call that function directly:
 	 */
+#ifndef CONFIG_UNACLOUD	 
 	if (likely(prev->sched_class == class &&
 		   rq->nr_running == rq->cfs.h_nr_running)) {
 		p = fair_sched_class.pick_next_task(rq, prev);
@@ -2939,6 +2953,7 @@ pick_next_task(struct rq *rq, struct task_struct *prev)
 
 		return p;
 	}
+#endif
 
 again:
 	for_each_class(class) {
@@ -3311,6 +3326,14 @@ void rt_mutex_setprio(struct task_struct *p, int prio)
 		if (oldprio < prio)
 			enqueue_flag = ENQUEUE_HEAD;
 		p->sched_class = &rt_sched_class;
+#ifdef CONFIG_UNACLOUD
+	} else if (unacloud_prio(prio)) {
+		if (dl_prio(oldprio))
+			p->dl.dl_boosted = 0;
+		if (rt_prio(oldprio))
+			p->rt.timeout = 0;
+		p->sched_class = &unacloud_sched_class;	
+#endif
 	} else {
 		if (dl_prio(oldprio))
 			p->dl.dl_boosted = 0;
@@ -3551,6 +3574,10 @@ static void __setscheduler_params(struct task_struct *p,
 		__setparam_dl(p, attr);
 	else if (fair_policy(policy))
 		p->static_prio = NICE_TO_PRIO(attr->sched_nice);
+#ifdef CONFIG_UNACLOUD
+	else if(unacloud_policy(policy))
+		p->static_prio = UNACLOUD_PRIO;	
+#endif		
 
 	/*
 	 * __sched_setscheduler() ensures attr->sched_priority == 0 when
@@ -3581,6 +3608,10 @@ static void __setscheduler(struct rq *rq, struct task_struct *p,
 		p->sched_class = &dl_sched_class;
 	else if (rt_prio(p->prio))
 		p->sched_class = &rt_sched_class;
+#ifdef CONFIG_UNACLOUD
+	else if(unacloud_prio(p->prio))
+		p->sched_class = &unacloud_sched_class ;
+#endif
 	else
 		p->sched_class = &fair_sched_class;
 }
@@ -3681,6 +3712,12 @@ static int __sched_setscheduler(struct task_struct *p,
 	struct rq *rq;
 	int reset_on_fork;
 
+#ifdef CONFIG_UNACLOUD
+	if (policy == SCHED_UNACLOUD) {
+		printk("__sched_setscheduler El scheduler es unacloud-");
+	}
+#endif
+
 	/* may grab non-irq protected spin_locks */
 	BUG_ON(in_interrupt());
 recheck:
@@ -3694,6 +3731,9 @@ recheck:
 		if (policy != SCHED_DEADLINE &&
 				policy != SCHED_FIFO && policy != SCHED_RR &&
 				policy != SCHED_NORMAL && policy != SCHED_BATCH &&
+#ifdef CONFIG_UNACLOUD
+				policy != SCHED_UNACLOUD &&
+#endif				
 				policy != SCHED_IDLE)
 			return -EINVAL;
 	}
@@ -3794,6 +3834,10 @@ recheck:
 	if (unlikely(policy == p->policy)) {
 		if (fair_policy(policy) && attr->sched_nice != task_nice(p))
 			goto change;
+#ifdef CONFIG_UNACLOUD
+		if(unacloud_policy(policy))
+			goto change ;
+#endif			
 		if (rt_policy(policy) && attr->sched_priority != p->rt_priority)
 			goto change;
 		if (dl_policy(policy) && dl_param_changed(p, attr))
@@ -7277,6 +7321,9 @@ void __init sched_init(void)
 		init_cfs_rq(&rq->cfs);
 		init_rt_rq(&rq->rt);
 		init_dl_rq(&rq->dl);
+#ifdef CONFIG_UNACLOUD
+		init_unacloud_rq(&rq->unacloud_rq);
+#endif		
 #ifdef CONFIG_FAIR_GROUP_SCHED
 		root_task_group.shares = ROOT_TASK_GROUP_LOAD;
 		INIT_LIST_HEAD(&rq->leaf_cfs_rq_list);
@@ -7377,6 +7424,10 @@ void __init sched_init(void)
 	set_cpu_rq_start_time();
 #endif
 	init_sched_fair_class();
+
+#ifdef CONFIG_UNACLOUD
+	init_sched_unacloud_class();
+#endif
 
 	scheduler_running = 1;
 }

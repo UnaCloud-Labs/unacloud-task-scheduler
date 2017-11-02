@@ -14,6 +14,10 @@ prev_fullver ?= $(shell dpkg-parsechangelog -l$(DEBIAN)/changelog -o1 -c1 | sed 
 
 family=ubuntu
 
+# Unacloud version
+local_version=-unacloud
+do_tools=false
+
 # This is an internally used mechanism for the daily kernel builds. It
 # creates packages whose ABI is suffixed with a minimal representation of
 # the current git HEAD sha. If .git/HEAD is not present, then it uses the
@@ -61,7 +65,7 @@ ifeq ($(full_build),false)
 skipdbg=true
 endif
 
-abinum		:= $(shell echo $(revision) | sed -r -e 's/([^\+~]*)\.[^\.]+(~.*)?(\+.*)?$$/\1/')$(abi_suffix)
+abinum		:= $(shell echo $(revision) | sed -r -e 's/([^\+~]*)\.[^\.]+(~.*)?(\+.*)?$$/\1/')$(abi_suffix)$(local_version)
 prev_abinum	:= $(shell echo $(prev_revision) | sed -r -e 's/([^\+~]*)\.[^\.]+(~.*)?(\+.*)?$$/\1/')$(abi_suffix)
 abi_release	:= $(release)-$(abinum)
 
@@ -224,7 +228,7 @@ kmake = make ARCH=$(build_arch) \
 	CONFIG_DEBUG_SECTION_MISMATCH=y \
 	KBUILD_BUILD_VERSION="$(uploadnum)" \
 	LOCALVERSION= localver-extra= \
-	CFLAGS_MODULE="-DPKG_ABI=$(abinum)" \
+	CFLAGS_MODULE="-DPKG_ABI=$(shell echo $(abinum) | sed 's/$(local_version)//g')" \
 	CFLAGS_KERNEL="-DGCC_UBUNTU_VERSION=$(gcc_ubuntu_version)"
 ifneq ($(LOCAL_ENV_CC),)
 kmake += CC=$(LOCAL_ENV_CC) DISTCC_HOSTS=$(LOCAL_ENV_DISTCC_HOSTS)
