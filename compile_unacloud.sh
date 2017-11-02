@@ -1,4 +1,8 @@
+#!/bin/bash
+
 # Unacloud compilation
+# ====================
+
 
 # generate the control file
 fakeroot debian/rules debian/control
