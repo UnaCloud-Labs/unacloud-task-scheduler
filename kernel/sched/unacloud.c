@@ -39,10 +39,19 @@ static int should_run_unacloud(void)
 				countRunning++;
 		}
 	}
-	if (countUnacloud > 0) {
-		//printk("should_run_unacloud: %d, %d\n", countUnacloud, countRunning);
+	if (countUnacloud < 2) {
+		return true;	
 	}
-	return countUnacloud + countRunning < 5;
+	
+	if (countRunning > 4) {
+		return true;
+	}
+	
+	if (countRunning == 1 && countUnacloud == 2) {
+		return true;
+	}
+
+	return false;
 }
 
 /*
