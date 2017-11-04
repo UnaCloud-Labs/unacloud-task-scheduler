@@ -2,11 +2,11 @@
 #
 # Ignore generated files under /debian folder
 
-changelog
-copyright
+# changelog
+# copyright
 
 control
-control.stub
+# control.stub
 files
 
 linux-cloud-tools-4*
