@@ -15,8 +15,8 @@ prev_fullver ?= $(shell dpkg-parsechangelog -l$(DEBIAN)/changelog -o1 -c1 | sed 
 family=ubuntu
 
 # Unacloud version
-local_version=-unacloud
-do_tools=false
+# local_version=-unacloud
+# do_tools=false
 
 # This is an internally used mechanism for the daily kernel builds. It
 # creates packages whose ABI is suffixed with a minimal representation of
@@ -221,6 +221,8 @@ conc_level		= -j$(CONCURRENCY_LEVEL)
 # Work out which compiler build we are using.
 gcc_ubuntu_version=$(shell $(CROSS_COMPILE)$(if $(gcc),$(gcc),gcc) --version 2>&1 | sed -n -e 's@^.*(Ubuntu.* [^-]*-\([0-9]*\).*).*@\1@p')
 
+# CFLAGS_MODULE="-DPKG_ABI=$(shell echo $(abinum) | sed 's/$(local_version)//g')" \
+
 # target_flavour is filled in for each step
 kmake = make ARCH=$(build_arch) \
 	CROSS_COMPILE=$(CROSS_COMPILE) \
@@ -228,7 +230,7 @@ kmake = make ARCH=$(build_arch) \
 	CONFIG_DEBUG_SECTION_MISMATCH=y \
 	KBUILD_BUILD_VERSION="$(uploadnum)" \
 	LOCALVERSION= localver-extra= \
-	CFLAGS_MODULE="-DPKG_ABI=$(shell echo $(abinum) | sed 's/$(local_version)//g')" \
+ 	CFLAGS_MODULE="-DPKG_ABI=$(abinum)" \
 	CFLAGS_KERNEL="-DGCC_UBUNTU_VERSION=$(gcc_ubuntu_version)"
 ifneq ($(LOCAL_ENV_CC),)
 kmake += CC=$(LOCAL_ENV_CC) DISTCC_HOSTS=$(LOCAL_ENV_DISTCC_HOSTS)
